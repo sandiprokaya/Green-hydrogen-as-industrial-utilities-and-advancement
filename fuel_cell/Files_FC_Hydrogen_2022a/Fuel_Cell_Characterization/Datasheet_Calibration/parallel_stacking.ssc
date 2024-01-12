@@ -1,0 +1,48 @@
+component trafo
+% Transformer :2.0
+% Models an association of fuel cell in a parallel stack
+% V2 = V1 and I_2 = N*I_1 where N is the number of elements in parallel. 
+% Copyright 2005-2016 The MathWorks, Inc.
+
+nodes
+    p1 = foundation.electrical.electrical; % 1+:left
+    n1 = foundation.electrical.electrical; % 1-:left
+    p2 = foundation.electrical.electrical; % 2+:right
+    n2 = foundation.electrical.electrical; % 2-:right
+end
+
+parameters
+    n = 1;   % Parallel Element Number
+    R_vect = {[0.1 0.005 0.005]/47.5, 'Ohm'};   % Resistance vector
+    i_vect = {[0 50 230], 'A'}; %Current vector
+end
+
+parameters(Access=protected)
+    interp_method = simscape.enum.interpolation.linear; % Interpolation method
+    extrap_method = simscape.enum.extrapolation.linear; % Extrapolation method
+end
+
+variables
+    i1 = { 0, 'A' }; % Primary current
+    v1 = { 0, 'V' }; % Primary voltage
+    i2 = { 0, 'A' }; % Secondary current
+    v2 = { 0, 'V' }; % Secondary voltage
+    R = {0.01, 'Ohm'};
+end
+
+branches
+    i1 : p1.i -> n1.i;
+    i2 : p2.i -> n2.i;
+end
+
+equations
+    assert(n>0)
+    R == tablelookup(i_vect, R_vect, i2, interpolation=interp_method, extrapolation=extrap_method);
+    v1 == p1.v - n1.v;
+    v2 == p2.v - n2.v;
+    v1 == v2+R*i2;
+    i2 == -n*i1;
+end
+
+end
+
